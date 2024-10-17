@@ -1,0 +1,54 @@
+# Windows Node Configuration:
+
+# Ensure the Windows machine where IIS is running has WinRM enabled, allowing Ansible to manage it remotely.
+# Install Ansible on a Linux controller or a remote management machine.
+# Install Required Ansible Collections:
+
+# You'll need ansible.windows for managing Windows features and tasks.
+# Install it with the following command:
+# bash
+# Copy code
+# ansible-galaxy collection install ansible.windows
+# Tools for SSL Certificates:
+
+# Win-ACME (ACMEv2 client for Windows) or Posh-ACME (PowerShell ACMEv2 client) to request and install SSL certificates from Let's Encrypt.
+
+---
+- name: Automate IIS SSL with Ansible
+  hosts: windows
+  tasks:
+
+    - name: Install IIS and Required Features
+      ansible.windows.win_feature:
+        name:
+          - Web-Server
+          - Web-Http-Redirect
+          - Web-WebSockets
+        state: present
+
+    - name: Download Win-ACME
+      ansible.builtin.get_url:
+        url: https://github.com/win-acme/win-acme/releases/download/v2.1.20.1185/win-acme.v2.1.20.1185.zip
+        dest: C:\temp\win-acme.zip
+
+    - name: Unzip Win-ACME
+      ansible.windows.win_unzip:
+        src: C:\temp\win-acme.zip
+        dest: C:\win-acme\
+
+    - name: Request SSL Certificate for IIS using Win-ACME
+      ansible.windows.win_command:
+        command: C:\win-acme\wacs.exe --target iis --siteid 1 --installationsiteid 1 --email user@example.com --accepttos --store centralssl --centralsslstore C:\Central_SSL --notaskscheduler --https
+
+    - name: Bind SSL Certificate to IIS Site
+      ansible.windows.win_iis_webbinding:
+        name: 'Default Web Site'
+        protocol: https
+        port: 443
+        certificate_hash: "{{ lookup('win_cert_store', 'subject=*.example.com, store=My') }}"
+        certificate_store_name: My
+
+
+# SSL Store Management: You can customize how certificates are stored, using centralized certificate stores or default IIS certificate stores.
+# Automation: Use Ansible Tower or AWX for scheduling the automation playbook periodically to ensure certificate renewal and management.
+# Permissions: Ensure that the Ansible user has appropriate permissions on the Windows server for installing features and modifying IIS setting

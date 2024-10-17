@@ -1,0 +1,67 @@
+# Prerequest - The Ansible controller must have the community.windows collection installed
+# ansible-galaxy collection install community.windows
+# Windows target machine must have WinRM enabled and configured
+
+
+- name: Create Self-Signed Certificate for IIS with Auto-Update
+  hosts: windows
+  gather_facts: false
+  tasks:
+
+    - name: Check if the certificate already exists
+      win_certificate_store:
+        action: find
+        store_name: MY
+        subject_name: "{{ cert_subject_name }}"
+      register: cert_check
+
+    - name: Create a self-signed certificate if it does not exist
+      win_certificate_store:
+        action: create
+        store_name: MY
+        subject_name: "{{ cert_subject_name }}"
+        dns_name: "{{ cert_subject_name }}"
+        provider: "Microsoft Software Key Storage Provider"
+        state: present
+        key_usage:
+          - DataEncipherment
+          - KeyEncipherment
+          - DigitalSignature
+        validity_in_days: 365
+      when: cert_check.certificates | length == 0
+      register: new_cert
+
+    - name: Retrieve the thumbprint of the new certificate (or the existing one)
+      set_fact:
+        cert_thumbprint: "{{ new_cert.thumbprint | default(cert_check.certificates[0].thumbprint) }}"
+
+    - name: Bind the certificate to IIS HTTPS port
+      win_iis_webbinding:
+        name: "Default Web Site"
+        protocol: https
+        port: 443
+        ip: '*'
+        certificate_hash: "{{ cert_thumbprint }}"
+        certificate_store_name: MY
+        state: present
+
+    - name: Ensure the certificate auto-renews with a scheduled task
+      win_scheduled_task:
+        name: "Auto-Renew IIS Self-Signed Certificate"
+        description: "Automatically renews the self-signed certificate for IIS"
+        actions:
+          - path: "powershell.exe"
+            arguments: "-ExecutionPolicy Bypass -Command 'Get-ChildItem Cert:\\LocalMachine\\MY | Where-Object { $_.Subject -eq \"CN={{ cert_subject_name }}\" } | Remove-Item; certreq -new -dnsname {{ cert_subject_name }} -signer-cert -cn {{ cert_subject_name }}'"
+        triggers:
+          - type: daily
+            start_boundary: "2024-01-01T00:00:00"
+            random_delay: PT5M
+        username: "SYSTEM"
+        state: present
+
+# win_certificate_store module searches for an existing certificate in the MY (Personal) certificate store using the subject_name
+# If no certificates are found (cert_check.certificates | length == 0), it proceeds to create a new self-signed certificate.
+# A new self-signed certificate is created with a validity of 365 days using the specified subject name ({{ cert_subject_name }}).
+# You can modify the validity_in_days if you want a longer or shorter expiration period.
+# win_iis_webbinding module is used to bind the newly created certificate to IIS over port 443 (HTTPS).
+# A Windows Scheduled Task is created that runs a PowerShell script.

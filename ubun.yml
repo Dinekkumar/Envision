@@ -1,0 +1,62 @@
+# Install Required Ansible Roles
+# $ ansible-galaxy install geerlingguy.certbot
+
+- hosts: web_servers
+
+  become: yes
+
+  roles:
+
+    - role: geerlingguy.certbot
+
+      certbot_create_if_missing: true
+
+      certbot_certs:
+
+        - domains:
+
+            - "example.com"
+
+            - "www.example.com"
+
+# 0 3 * * * /usr/bin/ansible-playbook /path/to/your/playbook.yml --tags "certbot" - cron value
+
+- name: SSL Certificate Management
+
+  hosts: webservers
+
+  become: yes
+
+  tasks:
+
+    - name: Generate Private Key
+
+      openssl_privatekey:
+
+        path: /etc/ssl/private/your_domain.key
+
+    - name: Generate CSR
+
+      openssl_csr:
+
+        path: /etc/ssl/csr/your_domain.csr
+
+        privatekey_path: /etc/ssl/private/your_domain.key
+
+        common_name: your_domain.com
+
+    - name: Obtain/Renew Certificate (Let's Encrypt)
+
+      community.crypto.acme_certificate:
+
+        account_key_src: /path/to/your/account.key
+
+        csr: /etc/ssl/csr/your_domain.csr
+
+        dest: /etc/ssl/certs/your_domain.crt
+
+        fullchain_dest: /etc/ssl/certs/your_domain_fullchain.crt
+
+    - name: Install Certificate
+
+      # Your web server configuration tasks here (e.g., update Apache or Nginx)
