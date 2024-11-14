@@ -1,19 +1,7 @@
-I am Dinek Kumar from Presidio, currently working on the cloud migration project for the Chartmover group. As part of the migration process, I need to collect some server information from the Chartmover server.
-
-Could you please provide the necessary user credentials to access the server? If needed, should I create a ServiceNow ticket for formal approval of the user access?
-
-
-Subject: Request for IP Addresses or Completion of Attachment for ChartMover Migration
+Hi Traci and Team,
  
-Hi [Recipient's Name],
+Apologies for any confusion earlier. I’d like to request admin (or elevated) access to my personal Virtual Desktop Infrastructure (VDI) in order to install the necessary developer tools, such as Terraform and PuTTY.
  
-To proceed with the ServiceNow ticket for access as part of the ChartMover migration process, I need the IP addresses for the server hostnames listed in the attached document.
-Could you please either:
-Provide the IP addresses directly so that we can create the SNOW ticket for access, or
-Fill in the missing details in the attachment and send it back to us?
-Either approach will work, and your assistance in completing this step will enable us to move forward with the next phase of the migration process.
+For the ChartMover migration servers, I only need basic read access at this stage, as we are still in the discovery phase. This will allow me to fetch the details required for the migration assessment.
  
-Thank you very much for your help!
- 
-Best regards,
-[Your Name]
+Could you please assist with this? I appreciate your help!
