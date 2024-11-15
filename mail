@@ -1,7 +1,1 @@
-Hi Traci and Team,
- 
-Apologies for any confusion earlier. I’d like to request admin (or elevated) access to my personal Virtual Desktop Infrastructure (VDI) in order to install the necessary developer tools, such as Terraform and PuTTY.
- 
-For the ChartMover migration servers, I only need basic read access at this stage, as we are still in the discovery phase. This will allow me to fetch the details required for the migration assessment.
- 
-Could you please assist with this? I appreciate your help!
+Get-NetTCPConnection | Select-Object -Property LocalPort, RemotePort, State, OwningProcess | Sort-Object LocalPor
